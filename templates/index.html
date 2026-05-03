@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiagnoseMyPlant — Intelligent Crop Diagnostics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --g1: #0a3d1f;
+            --g2: #145a32;
+            --g3: #1e8449;
+            --accent: #a8e063;
+            --accent2: #f9f871;
+            --surface: #0d1f13;
+            --surface2: #112819;
+            --text: #e8f5e9;
+            --muted: #7aab87;
+            --white: #ffffff;
+            --danger: #ff6b6b;
+            --warn: #ffd166;
+            --card-bg: rgba(20, 45, 25, 0.7);
+            --border: rgba(168, 224, 99, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: var(--surface);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* ─── NAV ─── */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 60px;
+            background: rgba(10, 20, 12, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            transition: padding 0.3s;
+        }
+
+        .nav-logo {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--accent);
+            letter-spacing: -0.5px;
+        }
+
+        .nav-logo span { color: var(--white); }
+
+        .nav-links {
+            display: flex;
+            gap: 36px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.92rem;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-links a:hover, .nav-links a.active { color: var(--accent); }
+
+        .nav-cta {
+            background: var(--accent);
+            color: var(--g1) !important;
+            padding: 9px 22px;
+            border-radius: 50px;
+            font-weight: 700 !important;
+            font-size: 0.88rem !important;
+            transition: background 0.2s, transform 0.2s !important;
+        }
+
+        .nav-cta:hover { background: #c6f08a !important; transform: translateY(-1px); }
+
+        /* ─── PAGES ─── */
+        .page { display: none; min-height: 100vh; }
+        .page.active { display: block; }
+
+        /* ─── HERO / LANDING ─── */
+        #page-home {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-canvas {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+        }
+
+        .leaf-bg {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 70% 30%, rgba(30,132,73,0.18) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 80% at 20% 70%, rgba(14,90,50,0.22) 0%, transparent 60%);
+        }
+
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(168,224,99,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(168,224,99,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 120px 20px 80px;
+        }
+
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(168,224,99,0.1);
+            border: 1px solid rgba(168,224,99,0.3);
+            color: var(--accent);
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+            animation: fadeUp 0.6s ease both;
+        }
+
+        .hero-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(3rem, 8vw, 6.5rem);
+            font-weight: 800;
+            line-height: 1.0;
+            letter-spacing: -2px;
+            margin-bottom: 28px;
+            animation: fadeUp 0.7s 0.1s ease both;
+        }
+
+        .hero-title .line2 {
+            display: block;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            max-width: 560px;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: var(--muted);
+            margin-bottom: 48px;
+            animation: fadeUp 0.7s 0.2s ease both;
+        }
+
+        .hero-btns {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+            animation: fadeUp 0.7s 0.3s ease both;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--g3), #27ae60);
+            color: var(--white);
+            padding: 16px 36px;
+            border-radius: 50px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 8px 30px rgba(30,132,73,0.35);
+            display: inline-block;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 40px rgba(30,132,73,0.45);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text);
+            padding: 15px 32px;
+            border-radius: 50px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            text-decoration: none;
+            transition: border-color 0.2s, color 0.2s, background 0.2s;
+            display: inline-block;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(168,224,99,0.05);
+        }
+
+        /* ─── HOW IT WORKS ─── */
+        .how-section {
+            padding: 100px 60px;
+            background: var(--surface2);
+            border-top: 1px solid var(--border);
+        }
+
+        .section-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 60px;
+            max-width: 500px;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+        }
+
+        .step-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 36px 28px;
+            transition: border-color 0.3s, transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step-card:hover { transform: translateY(-6px); border-color: rgba(168,224,99,0.4); }
+
+        .step-num {
+            font-family: 'Syne', sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            color: rgba(168,224,99,0.12);
+            line-height: 1;
+            margin-bottom: 20px;
+        }
+
+        .step-icon {
+            font-size: 2rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .step-card h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 10px;
+        }
+
+        .step-card p {
+            font-size: 0.88rem;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        /* ─── MODEL PAGE ─── */
+        #page-model {
+            padding-top: 80px;
+            min-height: 100vh;
+            background: var(--surface);
+        }
+
+        .model-header {
+            text-align: center;
+            padding: 80px 20px 60px;
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .model-container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        .dropzone {
+            border: 2px dashed rgba(168,224,99,0.3);
+            border-radius: 16px;
+            padding: 60px 30px;
+            text-align: center;
+            background: var(--card-bg);
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .dropzone:hover {
+            border-color: var(--accent);
+            background: rgba(168,224,99,0.05);
+        }
+
+        .dropzone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .dz-icon { font-size: 3rem; margin-bottom: 16px; }
+
+        .dz-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 8px;
+        }
+
+        .dz-sub {
+            font-size: 0.84rem;
+            color: var(--muted);
+        }
+
+        .dz-preview {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .dz-preview img {
+            max-width: 100%;
+            max-height: 280px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 2px solid var(--border);
+        }
+
+        /* Analyze button */
+        .analyze-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--g3), #27ae60);
+            color: var(--white);
+            border: none;
+            border-radius: 14px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1.05rem;
+            cursor: pointer;
+            margin-top: 28px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 8px 30px rgba(30,132,73,0.3);
+            letter-spacing: 0.5px;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 40px rgba(30,132,73,0.45);
+        }
+
+        /* Result card */
+        .result-card {
+            margin-top: 36px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        .result-img-wrap {
+            position: relative;
+        }
+
+        .result-img-wrap img {
+            width: 100%;
+            max-height: 280px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .result-body { padding: 28px; }
+
+        .result-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.88rem;
+            margin-bottom: 16px;
+        }
+
+        .result-status.diseased {
+            background: rgba(255,107,107,0.15);
+            border: 1px solid rgba(255,107,107,0.3);
+            color: var(--danger);
+        }
+
+        .result-status.healthy-badge {
+            background: rgba(168,224,99,0.12);
+            border: 1px solid rgba(168,224,99,0.3);
+            color: var(--accent);
+        }
+
+        .result-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--white);
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .result-crop {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 24px;
+        }
+
+        .advice-block {
+            background: rgba(255,209,102,0.08);
+            border: 1px solid rgba(255,209,102,0.2);
+            border-radius: 12px;
+            padding: 18px 20px;
+        }
+
+        .advice-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--warn);
+            margin-bottom: 8px;
+        }
+
+        .advice-text {
+            font-size: 0.92rem;
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        /* ─── ABOUT PAGE ─── */
+        #page-about {
+            padding-top: 80px;
+            min-height: 100vh;
+        }
+
+        .about-hero {
+            padding: 100px 60px 80px;
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .about-hero-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+        }
+
+        .about-hero h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+
+        .about-hero h1 em {
+            font-style: normal;
+            color: var(--accent);
+        }
+
+        .about-hero p {
+            font-size: 1rem;
+            color: var(--muted);
+            line-height: 1.8;
+            margin-bottom: 16px;
+        }
+
+        /* Supported Plants Alert Box */
+        .supported-plants-box {
+            margin-top: 40px;
+            background: rgba(255, 209, 102, 0.05);
+            border: 1px solid rgba(255, 209, 102, 0.3);
+            border-radius: 16px;
+            padding: 30px;
+        }
+
+        .supported-plants-box h3 {
+            color: var(--warn);
+            font-family: 'Syne', sans-serif;
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .plant-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .plant-list li {
+            font-size: 0.9rem;
+            color: var(--white);
+            background: var(--surface);
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .team-section {
+            padding: 100px 60px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-top: 50px;
+        }
+
+        .team-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 36px 24px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .team-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(168,224,99,0.4);
+        }
+
+        .avatar {
+            width: 100px; 
+            height: 100px;
+            border-radius: 50%;
+            background: var(--surface2);
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-family: 'Syne', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--muted);
+            margin: 0 auto 20px;
+            border: 3px solid var(--border);
+            overflow: hidden; 
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; 
+        }
+
+        .team-card h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--white);
+        }
+
+        /* ─── MODALS & POPUPS ─── */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: none; 
+            align-items: center; justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            width: 100%; max-width: 450px;
+            padding: 36px;
+            position: relative;
+            animation: fadeUp 0.3s ease both;
+        }
+
+        .close-modal {
+            position: absolute; top: 20px; right: 24px;
+            font-size: 1.5rem; color: var(--muted);
+            cursor: pointer; transition: color 0.2s;
+        }
+        .close-modal:hover { color: var(--danger); }
+
+        .modal-header { display: flex; align-items: center; gap: 20px; margin-bottom: 24px; }
+        .modal-header img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
+        .modal-name { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; color: var(--white); margin-bottom: 4px; }
+        .modal-role { font-size: 0.9rem; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+
+        .modal-bio { font-size: 0.95rem; color: var(--text); line-height: 1.7; margin-bottom: 28px; }
+
+        .modal-links { display: flex; gap: 12px; }
+        .modal-links a {
+            flex: 1; text-align: center; padding: 12px;
+            border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .btn-linkedin { background: #0077b5; color: white; }
+        .btn-linkedin:hover { background: #005885; transform: translateY(-2px); }
+        .btn-email { background: rgba(168,224,99,0.1); color: var(--accent); border: 1px solid rgba(168,224,99,0.3); }
+        .btn-email:hover { background: rgba(168,224,99,0.2); transform: translateY(-2px); }
+
+        /* ─── FOOTER ─── */
+        footer {
+            background: var(--surface2);
+            border-top: 1px solid var(--border);
+            padding: 40px 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .footer-logo {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--accent);
+        }
+
+        .footer-logo span { color: var(--white); }
+
+        .footer-links {
+            display: flex;
+            gap: 28px;
+            list-style: none;
+        }
+
+        .footer-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.84rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover { color: var(--accent); }
+
+        .footer-credit {
+            font-size: 0.78rem;
+            color: var(--muted);
+            text-align: right;
+        }
+
+        /* ─── ANIMATIONS ─── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ─── DEMO ANIMATION CSS ─── */
+        .proc-step {
+            display: flex; align-items: center; gap: 16px; margin-bottom: 20px;
+            opacity: 0.4; transition: all 0.3s ease;
+        }
+        .proc-step:last-child { margin-bottom: 0; }
+        .proc-step.active-step { opacity: 1; transform: scale(1.02); }
+        .proc-step.completed-step .proc-icon { background: var(--accent); color: var(--g1); }
+        
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 0 0 rgba(168, 224, 99, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(168, 224, 99, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(168, 224, 99, 0); }
+        }
+        .proc-step.active-step .proc-icon { animation: pulse-glow 1s infinite; border-color: var(--accent); }
+        
+        .proc-icon {
+            width: 42px; height: 42px; border-radius: 50%; background: var(--surface2);
+            border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; transition: all 0.3s ease;
+        }
+        .proc-text { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--white); font-size: 1rem; }
+        .proc-sub { font-size: 0.8rem; color: var(--muted); }
+
+        /* ─── Loading spinner ─── */
+        .spinner-wrap {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 48px; height: 48px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 900px) {
+            nav { padding: 16px 24px; }
+            .nav-links { gap: 20px; }
+            .how-section { padding: 70px 24px; }
+            .about-hero { padding: 80px 24px 60px; }
+            footer { padding: 30px 24px; }
+            .team-section { padding: 60px 24px; }
+        }
+
+        @media (max-width: 600px) {
+            .hero-title { font-size: 2.6rem; }
+            
+            nav { flex-direction: column; gap: 12px; padding: 15px; }
+            .nav-links li:not(:last-child) { display: block; }
+            .nav-links { gap: 25px; justify-content: center; width: 100%; }
+            .nav-links li:last-child { display: none; }
+            
+            #chat-widget { bottom: 15px !important; right: 15px !important; }
+            #chat-btn { padding: 12px 18px !important; font-size: 0.9rem !important; }
+        }
+    </style>
+</head>
+<body>
+
+<nav id="main-nav">
+    <div class="nav-logo">DiagnoseMy<span>Plant</span></div>
+    <ul class="nav-links">
+        <li><a onclick="showPage('home')" class="active" id="nav-home">Home</a></li>
+        <li><a onclick="showPage('model')" id="nav-model">Detect</a></li>
+        <li><a onclick="showPage('about')" id="nav-about">About</a></li>
+        <li><a onclick="toggleChat()" class="nav-cta">Ask AI →</a></li>
+    </ul>
+</nav>
+
+<div id="page-home" class="page active">
+    <div class="hero-canvas">
+        <div class="leaf-bg"></div>
+        <div class="grid-overlay"></div>
+    </div>
+
+    <section class="hero-content">
+        <div class="hero-tag">Deep Learning Diagnostics</div>
+        <h1 class="hero-title">
+            Diagnose Your<br>
+            <span class="line2">Crop's Health</span>
+        </h1>
+        <p class="hero-subtitle">
+            Upload a leaf photo. Our deep learning model identifies 39 diseases across 14 crops in seconds — with actionable treatment guidance.
+        </p>
+        <div class="hero-btns">
+            <a onclick="showPage('model')" class="btn-primary">🔬 Start Diagnosis</a>
+            <a onclick="showPage('about')" class="btn-outline">Learn More</a>
+        </div>
+    </section>
+
+    <section class="how-section">
+        <div style="max-width: 1100px; margin: 0 auto;">
+            <div class="section-label">Process</div>
+            <h2 class="section-title">How it works in 3 steps</h2>
+            <div class="steps-grid">
+                
+                <div class="step-card" onclick="showPage('model')" style="cursor: pointer;">
+                    <div class="step-num">01</div>
+                    <span class="step-icon">📸</span>
+                    <h3>Upload</h3>
+                    <p>Upload an existing image of the affected leaf from your device. Click here to start!</p>
+                </div>
+                
+                <!-- THIS IS THE CARD WE CHANGED FOR THE DEMO ANIMATION -->
+                <div class="step-card" onclick="openDemoModal()" style="cursor: pointer;">
+                    <div class="step-num">02</div>
+                    <span class="step-icon">🧠</span>
+                    <h3>See How Analysis Happens</h3>
+                    <p>Click here to watch a live demonstration of how our deep learning pipeline processes your leaf.</p>
+                </div>
+                
+                <div class="step-card" onclick="toggleChat()" style="cursor: pointer;">
+                    <div class="step-num">03</div>
+                    <span class="step-icon">💬</span> 
+                    <h3>Get Treatment Advice</h3>
+                    <p>Receive an instant diagnosis and click here to chat with our AI Agronomist.</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+</div>
+
+<div id="page-model" class="page">
+    <div class="model-header">
+        <div class="section-label">Diagnostic Tool</div>
+        <h1 style="font-family:'Syne',sans-serif; font-size: clamp(2rem,5vw,3.2rem); font-weight:800; margin-bottom:12px;">
+            Crop Disease <em style="font-style:normal; color:var(--accent);">Scanner</em>
+        </h1>
+        <p style="color: var(--muted); max-width: 500px; margin: 0 auto; line-height: 1.7;">
+            Upload a leaf photo for an instant diagnosis.
+        </p>
+    </div>
+
+    <div class="model-container">
+        <!-- THE ORIGINAL WORKING UPLOAD BUTTON AND SPINNER -->
+        <form id="predict-form" action="/predict" method="POST" enctype="multipart/form-data">
+            <div id="tab-upload" class="tab-panel active">
+                <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+                    <input type="file" id="file-input" name="file" accept="image/*" capture="environment" onchange="handleFileSelect(this)" required>
+                    <div id="dz-placeholder">
+                        <div class="dz-icon">🌿</div>
+                        <div class="dz-title">Drop your leaf photo here</div>
+                        <div class="dz-sub">or click to browse · JPG, PNG, JPEG supported</div>
+                    </div>
+                    <div class="dz-preview" id="dz-preview">
+                        <img id="dz-preview-img" src="" alt="Preview">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="analyze-btn" onclick="document.getElementById('spinner').style.display='block';">
+                🔬 Run Analysis
+            </button>
+        </form>
+
+        <div class="spinner-wrap" id="spinner">
+            <div class="spinner"></div>
+            <p style="color:var(--muted); font-size:0.88rem;">Analyzing leaf pattern…</p>
+        </div>
+
+        {% if prediction %}
+        <div class="result-card" id="result-card">
+            {% if image_path %}
+            <div class="result-img-wrap">
+                <img src="{{ '/' + image_path }}" alt="Analyzed Leaf">
+            </div>
+            {% endif %}
+            <div class="result-body">
+                <div class="result-status {% if 'healthy' in prediction.lower() %}healthy-badge{% else %}diseased{% endif %}">
+                    {% if 'healthy' in prediction.lower() %}✅ Healthy Plant{% else %}⚠️ Disease Detected{% endif %}
+                </div>
+                <div class="result-name">{{ prediction.split('___')[1].replace('_', ' ') if '___' in prediction else prediction.replace('_', ' ') }}</div>
+                <div class="result-crop">Crop: {{ prediction.split('___')[0].replace('_', ' ') if '___' in prediction else '—' }}</div>
+                <div class="advice-block">
+                    <div class="advice-label">Recommended Action</div>
+                    <div class="advice-text">{{ advice }}</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div id="page-about" class="page">
+    <section class="about-hero">
+        <div class="about-hero-inner">
+            <div>
+                <div class="section-label">About the Project</div>
+                <h1>Deep Learning meets <br><em>Field Agriculture</em></h1>
+                <p>
+                    DiagnoseMyPlant is a deep learning-based plant disease detection system built to give farmers, agronomists, and researchers instant diagnostics.
+                </p>
+                <p>
+                    The model is a custom CNN trained on the PlantVillage dataset. Built with TensorFlow/Keras and served via Flask.
+                </p>
+
+                <div class="supported-plants-box">
+                    <h3>🔍 Currently Supported Crops</h3>
+                    <p style="font-size: 0.95rem; color: var(--muted); line-height: 1.6;">
+                        Currently, our model is trained to successfully detect <strong>39 distinct diseases</strong> across the <strong>14 plants</strong> listed below. 
+                    </p>
+                    <ul class="plant-list">
+                        <li>🍎 Apple</li>
+                        <li>🫐 Blueberry</li>
+                        <li>🍒 Cherry</li>
+                        <li>🌽 Corn</li>
+                        <li>🍇 Grape</li>
+                        <li>🍊 Orange</li>
+                        <li>🍑 Peach</li>
+                        <li>🫑 Pepper</li>
+                        <li>🥔 Potato</li>
+                        <li>🍇 Raspberry</li>
+                        <li>🌱 Soybean</li>
+                        <li>🎃 Squash</li>
+                        <li>🍓 Strawberry</li>
+                        <li>🍅 Tomato</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section class="team-section">
+        <div class="section-label">The Team</div>
+        <h2 class="section-title">Built by final year students of AIKTC</h2>
+        
+        <div class="team-grid">
+            <div class="team-card" onclick="openTeamModal('amil')" style="cursor: pointer;">
+                <div class="avatar"><img src="{{ url_for('static', filename='uploads/amil.jpeg') }}" alt="Amil Siddiqui" onerror="this.style.display='none'; this.parentNode.innerHTML='A';"></div>
+                <h3>Amil Siddiqui</h3>
+            </div>
+            
+            <div class="team-card" onclick="openTeamModal('uzair')" style="cursor: pointer;">
+                <div class="avatar"><img src="{{ url_for('static', filename='uploads/uzair.jpeg') }}" alt="Uzair" onerror="this.style.display='none'; this.parentNode.innerHTML='U';"></div>
+                <h3>Uzair</h3>
+            </div>
+            
+            <div class="team-card" onclick="openTeamModal('ehtesham')" style="cursor: pointer;">
+                <div class="avatar"><img src="{{ url_for('static', filename='uploads/ehtesham.jpeg') }}" alt="Ehtesham Khan" onerror="this.style.display='none'; this.parentNode.innerHTML='E';"></div>
+                <h3>Ehtesham Khan</h3>
+            </div>
+            
+            <div class="team-card" onclick="openTeamModal('shahid')" style="cursor: pointer;">
+                <div class="avatar"><img src="{{ url_for('static', filename='uploads/shahid.jpeg') }}" alt="Shahid" onerror="this.style.display='none'; this.parentNode.innerHTML='S';"></div>
+                <h3>Shahid</h3>
+            </div>
+        </div>
+    </section>
+</div>
+
+<footer>
+    <div class="footer-logo">DiagnoseMy<span>Plant</span></div>
+    <ul class="footer-links">
+        <li><a onclick="showPage('home')">Home</a></li>
+        <li><a onclick="showPage('model')">Detect</a></li>
+        <li><a onclick="showPage('about')">About</a></li>
+    </ul>
+    <div class="footer-credit">
+        Developed by Amil, Uzair, Ehtesham & Shahid
+    </div>
+</footer>
+
+<div id="team-modal" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeTeamModal()">✖</span>
+        <div class="modal-header">
+            <img id="modal-img" src="" alt="Profile">
+            <div>
+                <div id="modal-name" class="modal-name">Name</div>
+                <div id="modal-role" class="modal-role">Role</div>
+            </div>
+        </div>
+        <div id="modal-bio" class="modal-bio">Bio goes here...</div>
+        <div class="modal-links">
+            <a id="modal-linkedin" href="#" target="_blank" class="btn-linkedin">🔗 LinkedIn</a>
+            <a id="modal-email" href="#" class="btn-email">✉️ Email</a>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════ NEW DEMO ANIMATION MODAL ═══════════════════ -->
+<div id="demo-modal" class="modal-overlay" onclick="closeDemoModalEvent(event)">
+    <div class="modal-content" style="max-width: 500px; background: var(--surface2);">
+        <span class="close-modal" onclick="closeDemoModal()">✖</span>
+        <div class="section-label" style="margin-bottom: 10px;">Live Pipeline Demo</div>
+        <h2 style="font-family: 'Syne', sans-serif; font-size: 1.8rem; margin-bottom: 24px; color: var(--white);">System Processing</h2>
+        
+        <div id="demo-animation-box">
+            <div class="proc-step demo-step" id="demo-step1">
+                <div class="proc-icon">📤</div>
+                <div><div class="proc-text">1. Uploading Image</div><div class="proc-sub">Sending to secure Python backend</div></div>
+            </div>
+            <div class="proc-step demo-step" id="demo-step2">
+                <div class="proc-icon">✂️</div>
+                <div><div class="proc-text">2. Preprocessing Data</div><div class="proc-sub">Resizing image to 128x128 pixels</div></div>
+            </div>
+            <div class="proc-step demo-step" id="demo-step3">
+                <div class="proc-icon">🧠</div>
+                <div><div class="proc-text">3. CNN Model Analysis</div><div class="proc-sub">Extracting features across 39 classes</div></div>
+            </div>
+            <div class="proc-step demo-step" id="demo-step4">
+                <div class="proc-icon">🤖</div>
+                <div><div class="proc-text">4. Generating Advice</div><div class="proc-sub">Fetching AI treatment plan from Gemini</div></div>
+            </div>
+        </div>
+        
+        <button id="replay-demo-btn" onclick="playDemoAnimation()" style="display:none; width: 100%; margin-top: 24px; padding: 14px; border-radius: 12px; background: rgba(168,224,99,0.1); border: 1px solid var(--accent); color: var(--accent); font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.3s;">🔄 Replay Demo</button>
+    </div>
+</div>
+
+<div id="chat-widget" style="position: fixed; bottom: 30px; right: 30px; z-index: 1000; font-family: 'DM Sans', sans-serif;">
+    <div id="chat-btn" onclick="toggleChat()" style="background: linear-gradient(135deg, var(--g3), #27ae60); color: white; padding: 16px 24px; border-radius: 50px; cursor: pointer; box-shadow: 0 8px 30px rgba(30,132,73,0.4); font-weight: 700; display: flex; gap: 10px; align-items: center; transition: 0.3s;">
+        <span>💬</span> Ask AI Agronomist
+    </div>
+
+    <div id="chat-window" style="display: none; width: 350px; height: 450px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); margin-bottom: 15px;">
+        <div style="background: var(--card-bg); padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <strong style="color: var(--white); font-family: 'Syne', sans-serif;">🌿 DiagnoseMyPlant Assistant</strong>
+            <span onclick="toggleChat()" style="color: var(--muted); cursor: pointer; font-size: 1.2rem;">✖</span>
+        </div>
+        <div id="chat-box" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: rgba(10, 20, 12, 0.5);">
+            <div style="background: rgba(168,224,99,0.1); border: 1px solid rgba(168,224,99,0.3); color: var(--text); padding: 12px 16px; border-radius: 12px 12px 12px 0; font-size: 0.9rem; align-self: flex-start; max-width: 85%;">
+                Hello! I can answer questions about crop diseases, fertilizers, and plant care. What do you need help with?
+            </div>
+        </div>
+        <div style="padding: 16px; background: var(--card-bg); border-top: 1px solid var(--border); display: flex; gap: 10px;">
+            <input type="text" id="chat-input" placeholder="Type a question..." style="flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: rgba(10,30,15,0.6); color: white; outline: none; font-family: 'DM Sans', sans-serif;">
+            <button onclick="sendChatMessage()" style="background: var(--accent); color: var(--g1); border: none; border-radius: 10px; padding: 0 16px; font-weight: 700; cursor: pointer;">Send</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- TEAM MODAL LOGIC WITH YOUR LINKS ---
+const teamData = {
+    "amil": {
+        name: "Amil Siddiqui",
+        role: "Full-Stack AI Developer", 
+        img: "static/uploads/amil.jpeg",
+        bio: "I am a final year student and an aspiring Data Analyst. For this project, I built the entire pipeline from scratch: I trained the Deep Learning CNN model, developed the Python/Flask backend, and designed the interactive frontend website. I also have hands-on experience in SQL, Python, Power BI, and Machine Learning.",
+        linkedin: "https://www.linkedin.com/in/amilsiddiqui",
+        email: "mailto:amilsiddiqui9321@gmail.com"
+    },
+    "uzair": {
+        name: "Uzair",
+        role: "Literature Survey & Research Lead",
+        img: "static/uploads/uzair.jpeg",
+        bio: "Led the literature survey by reviewing existing research papers and related work. Contributed to identifying research gaps and designing the project architecture based on findings.",
+        linkedin: "#",
+        email: "#"
+    },
+    "ehtesham": {
+        name: "Ehtesham Khan",
+        role: "Data Collection & Report Writing",
+        img: "static/uploads/ehtesham.jpeg",
+        bio: "Responsible for collecting and organizing datasets required for the project. Also handled the preparation and documentation of the final report, ensuring clarity and proper structure.",
+        linkedin: "#",
+        email: "#"
+    },
+    "shahid": {
+        name: "Shahid",
+        role: "Research Paper Analysis",
+        img: "static/uploads/shahid.jpeg",
+        bio: "Assisted in studying and analyzing research papers. Contributed to understanding methodologies and supporting the literature survey section.",
+        linkedin: "#",
+        email: "#"
+    }
+};
+
+function openTeamModal(memberId) {
+    const data = teamData[memberId];
+    document.getElementById('modal-img').src = data.img;
+    document.getElementById('modal-name').innerText = data.name;
+    document.getElementById('modal-role').innerText = data.role;
+    document.getElementById('modal-bio').innerText = data.bio;
+    document.getElementById('modal-linkedin').href = data.linkedin;
+    document.getElementById('modal-email').href = data.email;
+    document.getElementById('modal-linkedin').style.display = data.linkedin === "#" ? "none" : "block";
+    document.getElementById('modal-email').style.display = data.email === "#" ? "none" : "block";
+    document.getElementById('team-modal').style.display = 'flex';
+}
+function closeTeamModal() { document.getElementById('team-modal').style.display = 'none'; }
+function closeModal(event) { if (event.target.id === 'team-modal') closeTeamModal(); }
+
+// --- DEMO ANIMATION LOGIC (NEW) ---
+function openDemoModal() {
+    document.getElementById('demo-modal').style.display = 'flex';
+    playDemoAnimation();
+}
+function closeDemoModal() {
+    document.getElementById('demo-modal').style.display = 'none';
+}
+function closeDemoModalEvent(event) {
+    if (event.target.id === 'demo-modal') closeDemoModal();
+}
+
+function playDemoAnimation() {
+    const steps = document.querySelectorAll('.demo-step');
+    document.getElementById('replay-demo-btn').style.display = 'none';
+    
+    // Reset all steps to dull
+    steps.forEach(s => {
+        s.classList.remove('active-step');
+        s.classList.remove('completed-step');
+    });
+
+    let currentStep = 0;
+    const interval = setInterval(() => {
+        if (currentStep > 0) {
+            steps[currentStep - 1].classList.remove('active-step');
+        }
+        if (currentStep < steps.length) {
+            steps[currentStep].classList.add('active-step');
+            steps[currentStep].classList.add('completed-step');
+            currentStep++;
+        } else {
+            clearInterval(interval);
+            document.getElementById('replay-demo-btn').style.display = 'block'; // Show replay button at the end!
+        }
+    }, 850);
+}
+
+// --- STANDARD PAGE LOGIC ---
+const predictionResult = "{{ prediction if prediction else '' }}";
+window.addEventListener('DOMContentLoaded', () => {
+    if (predictionResult !== "") {
+        showPage('model');
+        setTimeout(() => {
+            const resultCard = document.getElementById('result-card');
+            if (resultCard) resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+    }
+});
+
+function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+    const page = document.getElementById('page-' + name);
+    if (page) page.classList.add('active');
+    const navLink = document.getElementById('nav-' + name);
+    if (navLink) navLink.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function handleFileSelect(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById('dz-placeholder').style.display = 'none';
+        const preview = document.getElementById('dz-preview');
+        preview.style.display = 'block';
+        document.getElementById('dz-preview-img').src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+// --- CHAT WIDGET LOGIC ---
+function toggleChat() {
+    const window = document.getElementById('chat-window');
+    const btn = document.getElementById('chat-btn');
+    if (window.style.display === 'none' || window.style.display === '') {
+        window.style.display = 'flex'; btn.style.display = 'none';
+    } else {
+        window.style.display = 'none'; btn.style.display = 'flex';
+    }
+}
+
+async function sendChatMessage() {
+    const input = document.getElementById('chat-input');
+    const box = document.getElementById('chat-box');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    box.innerHTML += `<div style="background: var(--g3); color: white; padding: 12px 16px; border-radius: 12px 12px 0 12px; font-size: 0.9rem; align-self: flex-end; max-width: 85%;">${msg}</div>`;
+    input.value = '';
+    box.scrollTop = box.scrollHeight; 
+
+    const loadingId = 'load-' + Date.now();
+    box.innerHTML += `<div id="${loadingId}" style="color: var(--muted); font-size: 0.8rem; align-self: flex-start; margin-left: 10px;">Typing...</div>`;
+    box.scrollTop = box.scrollHeight;
+
+    try {
+        const response = await fetch('/chat', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: msg })
+        });
+        const data = await response.json();
+        document.getElementById(loadingId).remove();
+        box.innerHTML += `<div style="background: rgba(168,224,99,0.1); border: 1px solid rgba(168,224,99,0.3); color: var(--text); padding: 12px 16px; border-radius: 12px 12px 12px 0; font-size: 0.9rem; align-self: flex-start; max-width: 85%; line-height: 1.5;">${data.reply}</div>`;
+    } catch (err) {
+        document.getElementById(loadingId).remove();
+        box.innerHTML += `<div style="color: var(--danger); font-size: 0.8rem; align-self: flex-start; margin-left: 10px;">Failed to connect to AI.</div>`;
+    }
+    box.scrollTop = box.scrollHeight;
+}
+
+document.getElementById('chat-input').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') sendChatMessage();
+});
+</script>
+
+</body>
+</html>
